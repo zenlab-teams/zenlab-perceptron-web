@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Early Warning System - Prediksi Kelulusan</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); padding: 40px; width: 100%; max-width: 480px; margin: 20px; }
+        h1 { color: #1a202c; font-size: 24px; margin-bottom: 8px; text-align: center; }
+        .subtitle { color: #718096; text-align: center; margin-bottom: 32px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #4a5568; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: #4299e1; }
+        input::placeholder { color: #cbd5e0; }
+        .btn { width: 100%; padding: 14px; background: #4299e1; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+        .btn:hover { background: #3182ce; }
+        .error { background: #fed7d7; color: #c53030; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; }
+        .info { background: #ebf8ff; color: #2b6cb0; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-size: 13px; line-height: 1.5; }
+        .info strong { display: block; margin-bottom: 4px; }
+        @media (max-width: 480px) { .card { padding: 24px; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>📊 Early Warning System</h1>
+        <p class="subtitle">Prediksi Kelulusan Mahasiswa pada Mata Kuliah Prasyarat</p>
+
+        <div class="info">
+            <strong>ℹ️ Dosen Wali — Input di awal semester:</strong>
+            Persentase Nilai Tugas 1 & 2 (skala 0-4.3), Persentase Penyelesaian Tugas, dan Kehadiran hingga minggu ke-5.
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/predict">
+            <div class="form-group">
+                <label for="nilai_tugas_1">Nilai Tugas 1 (0 - 4.3)</label>
+                <input type="number" step="0.1" min="0" max="4.3" required
+                       name="nilai_tugas_1" id="nilai_tugas_1"
+                       placeholder="Contoh: 3.0">
+            </div>
+            <div class="form-group">
+                <label for="nilai_tugas_2">Nilai Tugas 2 (0 - 4.3)</label>
+                <input type="number" step="0.1" min="0" max="4.3" required
+                       name="nilai_tugas_2" id="nilai_tugas_2"
+                       placeholder="Contoh: 2.5">
+            </div>
+            <div class="form-group">
+                <label for="hw_completion">Persentase Penyelesaian Tugas (0 - 100%)</label>
+                <input type="number" step="1" min="0" max="100" required
+                       name="hw_completion" id="hw_completion"
+                       placeholder="Contoh: 85">
+            </div>
+            <div class="form-group">
+                <label for="kehadiran">Persentase Kehadiran (0 - 100%)</label>
+                <input type="number" step="1" min="0" max="100" required
+                       name="kehadiran" id="kehadiran"
+                       placeholder="Contoh: 80">
+            </div>
+            <button type="submit" class="btn">🔍 Prediksi</button>
+        </form>
+    </div>
+</body>
+</html>
