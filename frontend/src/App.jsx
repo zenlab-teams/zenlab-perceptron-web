@@ -10,6 +10,16 @@ import {
   PlusCircle,
   Table2,
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  LabelList,
+  Legend,
+} from 'recharts';
 
 const API_URL = 'http://127.0.0.1:5000/api';
 
@@ -48,94 +58,211 @@ function SectionTitle({ icon: Icon, title }) {
 
 function DatasetChart({ metrics }) {
   const distribution = metrics?.dataset_distribution || {};
-  const rows = [
-    ['Data latih', distribution.train || metrics?.train_data || 0],
-    ['Data uji', distribution.test || metrics?.test_data || 0],
+  const data = [
+    {
+      name: 'Data latih',
+      value: distribution.train || metrics?.train_data || 0,
+    },
+    {
+      name: 'Data uji',
+      value: distribution.test || metrics?.test_data || 0,
+    },
   ];
-  const max = Math.max(...rows.map(([, value]) => value), 1);
 
   return (
-    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
+    <div className="flex flex-col h-full rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
       <SectionTitle icon={BarChart3} title="Distribusi Dataset" />
-      <div className="space-y-4">
-        {rows.map(([label, value]) => (
-          <div key={label} className="grid grid-cols-[88px_1fr_72px] items-center gap-3 text-sm">
-            <span className="font-medium text-[#3A332B]">{label}</span>
-            <div className="h-8 border border-[#D8D0C3] bg-[#F4F1EA]">
-              <div
-                className="h-full bg-[#B85C38]"
-                style={{ width: `${(value / max) * 100}%` }}
+      <div className="w-full h-[360px] pt-2 relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            barCategoryGap="15%"
+            margin={{ top: 20, right: 10, left: 10, bottom: 5 }}
+          >
+            <XAxis
+              dataKey="name"
+              axisLine={true}
+              tickLine={true}
+              stroke="#D8D0C3"
+              style={{ fontSize: '12px', fontWeight: 500, fill: '#3A332B' }}
+            />
+            <YAxis
+              axisLine={true}
+              tickLine={true}
+              stroke="#D8D0C3"
+              tickFormatter={(val) => val.toLocaleString('id-ID')}
+              style={{ fontSize: '12px', fill: '#756B5E' }}
+            />
+            <Tooltip
+              formatter={(value) => [value.toLocaleString('id-ID'), 'Jumlah']}
+              contentStyle={{
+                backgroundColor: '#FBF8F1',
+                borderColor: '#D8D0C3',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: '#1F1B16',
+              }}
+            />
+            <Bar dataKey="value" fill="#B85C38" radius={[4, 4, 0, 0]}>
+              <LabelList
+                dataKey="value"
+                position="top"
+                formatter={(val) => val.toLocaleString('id-ID')}
+                style={{ fill: '#1F1B16', fontWeight: 600, fontSize: '12px' }}
+                offset={6}
               />
-            </div>
-            <span className="text-right font-semibold text-[#1F1B16]">{value.toLocaleString('id-ID')}</span>
-          </div>
-        ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
 function ClassificationChart({ scores }) {
-  const classes = ['Tidak Lulus', 'Lulus'];
-  const metrics = [
-    ['precision', 'Precision'],
-    ['recall', 'Recall'],
-    ['f1_score', 'F1-Score'],
+  const chartData = [
+    {
+      name: 'Precision',
+      'Tidak Lulus': scores?.['Tidak Lulus']?.precision || 0,
+      'Lulus': scores?.['Lulus']?.precision || 0,
+    },
+    {
+      name: 'Recall',
+      'Tidak Lulus': scores?.['Tidak Lulus']?.recall || 0,
+      'Lulus': scores?.['Lulus']?.recall || 0,
+    },
+    {
+      name: 'F1-Score',
+      'Tidak Lulus': scores?.['Tidak Lulus']?.f1_score || 0,
+      'Lulus': scores?.['Lulus']?.f1_score || 0,
+    },
   ];
 
   return (
-    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
+    <div className="flex flex-col h-full rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
       <SectionTitle icon={BarChart3} title="Skor Klasifikasi" />
-      <div className="space-y-6">
-        {classes.map((className) => (
-          <div key={className}>
-            <p className="mb-3 text-sm font-semibold text-[#1F1B16]">{className}</p>
-            <div className="grid grid-cols-3 gap-3">
-              {metrics.map(([key, label]) => {
-                const value = scores?.[className]?.[key] || 0;
-                return (
-                  <div key={key} className="space-y-2">
-                    <div className="flex h-28 items-end border border-[#D8D0C3] bg-[#F4F1EA] px-2 pt-2">
-                      <div
-                        className="w-full bg-[#1F1B16]"
-                        style={{ height: `${Math.max(value * 100, 2)}%` }}
-                      />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#756B5E]">{label}</p>
-                      <p className="text-sm font-semibold text-[#B85C38]">{formatPercent(value)}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      <div className="w-full h-[360px] pt-2 relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} barCategoryGap="20%" barGap={4} margin={{ top: 25, right: 10, left: 10, bottom: 5 }}>
+            <XAxis
+              dataKey="name"
+              axisLine={true}
+              tickLine={true}
+              stroke="#D8D0C3"
+              style={{ fontSize: '11px', fontWeight: 600, fill: '#756B5E' }}
+            />
+            <YAxis
+              domain={[0, 1]}
+              axisLine={true}
+              tickLine={true}
+              stroke="#D8D0C3"
+              tickFormatter={(val) => `${Math.round(val * 100)}%`}
+              style={{ fontSize: '11px', fill: '#756B5E' }}
+            />
+            <Tooltip
+              formatter={(value, name) => [formatPercent(value), name]}
+              contentStyle={{
+                backgroundColor: '#FBF8F1',
+                borderColor: '#D8D0C3',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: '#1F1B16',
+              }}
+            />
+            <Legend verticalAlign="top" height={36} iconType="rect" style={{ fontSize: '12px' }} />
+            <Bar dataKey="Tidak Lulus" fill="#1F1B16" radius={[4, 4, 0, 0]}>
+              <LabelList
+                dataKey="Tidak Lulus"
+                position="top"
+                formatter={(val) => formatPercent(val)}
+                style={{ fill: '#1F1B16', fontWeight: 600, fontSize: '10px' }}
+                offset={6}
+              />
+            </Bar>
+            <Bar dataKey="Lulus" fill="#B85C38" radius={[4, 4, 0, 0]}>
+              <LabelList
+                dataKey="Lulus"
+                position="top"
+                formatter={(val) => formatPercent(val)}
+                style={{ fill: '#B85C38', fontWeight: 600, fontSize: '10px' }}
+                offset={6}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
 function ConfusionMatrix({ matrix }) {
-  const cells = [
-    ['Aktual tidak lulus', matrix?.tn || 0, matrix?.fp || 0],
-    ['Aktual lulus', matrix?.fn || 0, matrix?.tp || 0],
-  ];
+  const tn = matrix?.tn || 0;
+  const fp = matrix?.fp || 0;
+  const fn = matrix?.fn || 0;
+  const tp = matrix?.tp || 0;
 
   return (
-    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
-      <SectionTitle icon={Table2} title="Confusion Matrix" />
-      <div className="grid grid-cols-[1.1fr_1fr_1fr] border-l border-t border-[#D8D0C3] text-sm">
-        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 font-semibold text-[#756B5E]">Aktual / Prediksi</div>
-        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 text-center font-semibold text-[#756B5E]">Tidak lulus</div>
-        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 text-center font-semibold text-[#756B5E]">Lulus</div>
-        {cells.map(([label, left, right]) => (
-          <React.Fragment key={label}>
-            <div className="border-b border-r border-[#D8D0C3] p-3 font-medium text-[#3A332B]">{label}</div>
-            <div className="border-b border-r border-[#D8D0C3] p-3 text-center text-2xl font-semibold text-[#1F1B16]">{left.toLocaleString('id-ID')}</div>
-            <div className="border-b border-r border-[#D8D0C3] p-3 text-center text-2xl font-semibold text-[#B85C38]">{right.toLocaleString('id-ID')}</div>
-          </React.Fragment>
-        ))}
+    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5 sm:p-7">
+      <div className="mb-6 border-b border-[#D8D0C3] pb-4">
+        <div className="flex items-center gap-2">
+          <Table2 size={18} className="text-[#B85C38]" />
+          <h2 className="font-serif text-2xl text-[#1F1B16]">Confusion Matrix</h2>
+        </div>
+        <p className="mt-1 text-sm text-[#756B5E]">Perbandingan hasil perhitungan dengan data uji.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.5fr_1fr] items-center">
+        {/* Table on the Left */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="border-b-2 border-[#1F1B16]">
+                <th className="py-3 px-4"></th>
+                <th className="py-3 px-4 font-bold text-[#1F1B16] text-center">Prediksi Tidak Lulus</th>
+                <th className="py-3 px-4 font-bold text-[#1F1B16] text-center">Prediksi Lulus</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-[#D8D0C3]">
+                <td className="py-4 px-4 font-bold text-[#1F1B16]">Aktual Tidak Lulus</td>
+                <td className="py-4 px-4 text-center font-bold text-[#1F1B16] text-xl">{tn}</td>
+                <td className="py-4 px-4 text-center font-bold text-[#1F1B16] text-xl">{fp}</td>
+              </tr>
+              <tr className="border-b-2 border-[#1F1B16]">
+                <td className="py-4 px-4 font-bold text-[#1F1B16]">Aktual Lulus</td>
+                <td className="py-4 px-4 text-center font-bold text-[#1F1B16] text-xl">{fn}</td>
+                <td className="py-4 px-4 text-center font-bold text-[#1F1B16] text-xl">{tp}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* 2x2 Cards Grid on the Right */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* TN Card */}
+          <div className="rounded-[6px] border border-[#1F1B16] bg-[#F4F1EA] p-4 flex flex-col justify-between h-[90px] transition hover:shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#756B5E]">TN</span>
+            <span className="text-3xl font-bold text-[#1F1B16]">{tn}</span>
+          </div>
+
+          {/* FP Card */}
+          <div className="rounded-[6px] border border-[#1F1B16] bg-[#F4F1EA] p-4 flex flex-col justify-between h-[90px] transition hover:shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#756B5E]">FP</span>
+            <span className="text-3xl font-bold text-[#1F1B16]">{fp}</span>
+          </div>
+
+          {/* FN Card */}
+          <div className="rounded-[6px] border border-[#1F1B16] bg-[#F4F1EA] p-4 flex flex-col justify-between h-[90px] transition hover:shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#756B5E]">FN</span>
+            <span className="text-3xl font-bold text-[#1F1B16]">{fn}</span>
+          </div>
+
+          {/* TP Card */}
+          <div className="rounded-[6px] border border-[#1F1B16] bg-[#F4F1EA] p-4 flex flex-col justify-between h-[90px] transition hover:shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#756B5E]">TP</span>
+            <span className="text-3xl font-bold text-[#1F1B16]">{tp}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -225,31 +352,7 @@ function App() {
           </p>
         </header>
 
-        <section className="py-8">
-          <SectionTitle icon={BarChart3} title="Ringkasan Model" />
-          {metricsError ? (
-            <div className="rounded-[6px] border border-[#B85C38] bg-[#FBF8F1] p-4 text-sm font-medium text-[#B85C38]">
-              {metricsError}
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {summaryCards.map(([label, value, tone]) => (
-                  <MetricCard key={label} label={label} value={value} tone={tone} />
-                ))}
-              </div>
-              {metrics && (
-                <div className="mt-5 grid gap-5 lg:grid-cols-3">
-                  <DatasetChart metrics={metrics} />
-                  <ClassificationChart scores={metrics.class_scores} />
-                  <ConfusionMatrix matrix={metrics.confusion_matrix} />
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        <section className="grid gap-6 border-t border-[#D8D0C3] py-8 lg:grid-cols-[1fr_0.78fr]">
+        <section className="grid gap-6 py-8 lg:grid-cols-[1fr_0.78fr]">
           <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5 sm:p-7">
             <SectionTitle icon={Calculator} title="Prediksi Mahasiswa" />
             <form onSubmit={handlePredict} className="space-y-7">
@@ -388,6 +491,32 @@ function App() {
               </div>
             )}
           </div>
+        </section>
+
+        <section className="border-t border-[#D8D0C3] py-8">
+          <SectionTitle icon={BarChart3} title="Ringkasan Model" />
+          {metricsError ? (
+            <div className="rounded-[6px] border border-[#B85C38] bg-[#FBF8F1] p-4 text-sm font-medium text-[#B85C38]">
+              {metricsError}
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {summaryCards.map(([label, value, tone]) => (
+                  <MetricCard key={label} label={label} value={value} tone={tone} />
+                ))}
+              </div>
+              {metrics && (
+                <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                  <DatasetChart metrics={metrics} />
+                  <ClassificationChart scores={metrics.class_scores} />
+                  <div className="lg:col-span-2">
+                    <ConfusionMatrix matrix={metrics.confusion_matrix} />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
     </main>

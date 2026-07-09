@@ -1,31 +1,31 @@
-# Zenlab Early Warning System 🎓
+# Zenlab Early Warning System
 
 Sistem cerdas pendeteksi dini potensi kelulusan mahasiswa berdasarkan metrik akademik (Nilai Tugas & Ujian) dan kedisiplinan (Kehadiran). Sistem ini dirancang untuk membantu dosen atau wali akademik memberikan intervensi dini bagi mahasiswa yang berisiko tidak lulus (Remedial).
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
 Proyek ini telah dipisahkan ke dalam dua direktori utama:
 - `backend/` : Berisi sistem *Machine Learning*, pembuatan dataset, dan *server API* Flask.
 - `frontend/` : Berisi antarmuka web modern menggunakan React, Vite, dan Tailwind CSS.
 
-## 🚀 Fitur Utama
+## Fitur Utama
 
-- **Machine Learning**: Menggunakan algoritma `DecisionTreeClassifier` (akurasi ~99%) yang mempelajari pola dari 12.000+ data historis.
+- **Machine Learning**: Menggunakan algoritma `Perceptron Classifier` (linear classifier) yang mempelajari pola dari 12.000+ data historis.
 - **Konfigurasi Terpusat**: Seluruh kriteria kelulusan (bobot nilai dan batas minimal) dapat diatur dengan mudah melalui satu file `.env` di dalam folder `backend/`.
 - **Backend API**: Dibangun menggunakan arsitektur Flask yang siap menyajikan prediksi secara real-time.
-- **Frontend Modern**: Menggunakan React (Vite) + Tailwind CSS v4 untuk menghasilkan antarmuka pengguna yang sangat responsif, elegan, dan profesional (hanya mode terang).
+- **Frontend Modern**: Menggunakan React (Vite), Recharts, + Tailwind CSS v4 untuk menghasilkan antarmuka pengguna yang sangat responsif, elegan, interaktif, dan profesional (hanya mode terang).
 - **Data Pipeline CLI**: Script otomatis untuk menggabungkan, mengagregasi, dan memberi label pada *raw dataset* sebelum dilatih ke dalam model.
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## Teknologi yang Digunakan
 
 * **Backend**: Python 3, Flask, scikit-learn, pandas, numpy, python-dotenv
-* **Frontend**: React (Vite), Tailwind CSS, Axios, Lucide React
+* **Frontend**: React (Vite), Tailwind CSS, Recharts, Axios, Lucide React
 
 ---
 
-## ⚙️ Persiapan & Instalasi
+## Persiapan & Instalasi
 
 Pastikan komputer Anda sudah terinstal **Python 3.x** dan **Node.js (NPM)**.
 
@@ -45,7 +45,7 @@ npm install
 
 ---
 
-## 🔧 Konfigurasi Kriteria Kelulusan
+## Konfigurasi Kriteria Kelulusan
 
 Sistem ini bersifat dinamis. Anda bisa mengatur kriteria aman seorang mahasiswa melalui file `.env` di dalam direktori `backend/`:
 
@@ -61,7 +61,7 @@ THRESHOLD_NILAI=75      # Batas minimal akumulasi nilai akhir
 
 ---
 
-## 🧠 Membangun & Melatih Model
+## Membangun & Melatih Model
 
 Jika Anda memiliki data baru (di dalam folder `backend/dataset/`) atau baru saja mengubah kriteria kelulusan di `backend/.env`, Anda **wajib** membuat ulang dataset dan melatih ulang model.
 
@@ -77,11 +77,11 @@ python model/dataset_builder.py
 cd backend
 python model/train_model.py
 ```
-*Proses ini akan melatih algoritma Decision Tree berdasarkan dataset yang sudah bersih, lalu menghasilkan file `model/early_warning_model.pkl`.*
+*Proses ini akan melatih algoritma Perceptron berdasarkan dataset yang sudah bersih, lalu menghasilkan file `model/early_warning_model.pkl`.*
 
 ---
 
-## 🏃‍♂️ Cara Menjalankan Aplikasi
+## Cara Menjalankan Aplikasi
 
 Anda harus menjalankan Backend dan Frontend secara bersamaan.
 
@@ -103,10 +103,10 @@ npm run dev
 
 ---
 
-## 💡 Panduan Penggunaan Web
+## Panduan Penggunaan Web
 
 1. Buka halaman Web dari server Vite.
 2. Pada form **Persentase Kehadiran**, masukkan angka 0-100.
 3. Pada **Nilai Tugas** dan **Nilai Ujian**, klik tombol **+ Tambah** untuk menambah kolom nilai sebanyak apapun yang Anda butuhkan (sistem akan otomatis merata-ratakannya).
-4. Klik **Proses Prediksi Kelulusan**.
-5. Hasil berupa kartu visual yang menunjukkan status **LULUS** atau **REMEDIAL** beserta kalkulasi hasil akhir akan seketika muncul.
+4. Klik **Proses Prediksi**.
+5. Hasil berupa kartu visual yang menunjukkan status **Lulus** atau **Tidak Lulus** beserta kalkulasi hasil akhir akan seketika muncul.
