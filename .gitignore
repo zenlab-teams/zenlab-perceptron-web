@@ -1,0 +1,42 @@
+# Python (Backend)
+backend/__pycache__/
+backend/*.py[cod]
+backend/*.pyo
+backend/*.pyd
+backend/*.pyc
+backend/*.pkl
+
+# Environment
+backend/.env
+backend/.env.local
+backend/.env.*.local
+.env
+.env.local
+
+# Virtual environments
+venv/
+env/
+.venv/
+backend/venv/
+backend/env/
+backend/.venv/
+
+# Dataset XLSX outputs (generated files)
+backend/dataset/*.xlsx
+
+# Node / Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
