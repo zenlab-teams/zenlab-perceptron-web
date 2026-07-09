@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # Load env variables from root folder
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-load_dotenv(dotenv_path=os.path.join(base_dir, '.env'))
+load_dotenv(dotenv_path=os.path.join(base_dir, '.env'), override=True)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Build and aggregate student dataset.")
@@ -103,7 +103,7 @@ def main():
     print(f"\nExporting final merged dataset to {output_path}...")
     data.to_excel(output_path, index=False)
     
-    print("\n[Done!] Class distribution (1 = Lulus, 0 = Remedial):")
+    print("\n[Done!] Class distribution (1 = Lulus, 0 = Tidak Lulus):")
     print(data['Status'].value_counts())
 
 if __name__ == "__main__":

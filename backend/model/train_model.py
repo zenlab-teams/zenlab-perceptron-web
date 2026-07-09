@@ -17,7 +17,7 @@ from sklearn.metrics import (
 
 # Load env variables from root folder
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-load_dotenv(dotenv_path=os.path.join(base_dir, '.env'))
+load_dotenv(dotenv_path=os.path.join(base_dir, '.env'), override=True)
 
 def main():
     dataset_path = os.path.join(base_dir, 'dataset', 'clean_dataset_final.xlsx')

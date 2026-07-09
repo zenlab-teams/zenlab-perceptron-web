@@ -6,14 +6,15 @@ import numpy as np
 import os
 from dotenv import load_dotenv
 
+# Define base directory to locate model
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Load env variables
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(base_dir, '.env'), override=True)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
-# Define base directory to locate model
-base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, 'model', 'early_warning_model.pkl')
 metrics_path = os.path.join(base_dir, 'model', 'metrics.json')
 
