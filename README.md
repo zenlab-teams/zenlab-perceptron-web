@@ -5,14 +5,14 @@ Sistem cerdas pendeteksi dini potensi kelulusan mahasiswa berdasarkan metrik aka
 ## Struktur Proyek
 
 Proyek ini telah dipisahkan ke dalam dua direktori utama:
-- `backend/` : Berisi sistem *Machine Learning*, pembuatan dataset, dan *server API* Flask.
+- `backend/` : Berisi sistem *Machine Learning*, pembuatan dataset, dan *server API* FastAPI.
 - `frontend/` : Berisi antarmuka web modern menggunakan React, Vite, dan Tailwind CSS.
 
 ## Fitur Utama
 
 - **Machine Learning**: Menggunakan algoritma `Perceptron Classifier` (linear classifier) yang mempelajari pola dari 12.000+ data historis.
 - **Konfigurasi Terpusat**: Seluruh kriteria kelulusan (bobot nilai dan batas minimal) dapat diatur dengan mudah melalui satu file `.env` di dalam folder `backend/`.
-- **Backend API**: Dibangun menggunakan arsitektur Flask yang siap menyajikan prediksi secara real-time.
+- **Backend API**: Dibangun menggunakan FastAPI yang siap menyajikan prediksi secara real-time.
 - **Frontend Modern**: Menggunakan React (Vite), Recharts, + Tailwind CSS v4 untuk menghasilkan antarmuka pengguna yang sangat responsif, elegan, interaktif, dan profesional (hanya mode terang).
 - **Data Pipeline CLI**: Script otomatis untuk menggabungkan, mengagregasi, dan memberi label pada *raw dataset* sebelum dilatih ke dalam model.
 
@@ -20,7 +20,7 @@ Proyek ini telah dipisahkan ke dalam dua direktori utama:
 
 ## Teknologi yang Digunakan
 
-* **Backend**: Python 3, Flask, scikit-learn, pandas, numpy, python-dotenv
+* **Backend**: Python 3, FastAPI, Uvicorn, scikit-learn, pandas, numpy, python-dotenv
 * **Frontend**: React (Vite), Tailwind CSS, Recharts, Axios, Lucide React
 
 ---
@@ -55,6 +55,7 @@ BOBOT_UJIAN=60          # Bobot nilai ujian (dalam persen)
 BOBOT_TUGAS=40          # Bobot nilai tugas (dalam persen)
 THRESHOLD_HADIR=50      # Batas minimal kehadiran (dalam persen)
 THRESHOLD_NILAI=75      # Batas minimal akumulasi nilai akhir
+PORT=8000               # Port server backend untuk Uvicorn
 ```
 
 *Setiap kali Anda merubah nilai pada `.env`, Anda harus melatih ulang model (lihat langkah "Membangun & Melatih Model" di bawah) dan me-restart server backend.*
@@ -89,9 +90,15 @@ Anda harus menjalankan Backend dan Frontend secara bersamaan.
 Buka terminal, pastikan berada di folder `backend/`, lalu jalankan:
 ```bash
 cd backend
-python app.py
+uvicorn app:app --reload --host 127.0.0.1 --port 8000
 ```
-*(Server akan berjalan di http://127.0.0.1:5000)*
+*(Server akan berjalan di http://127.0.0.1:8000)*
+
+Untuk VPS, jalankan:
+```bash
+cd backend
+uvicorn app:app --host 0.0.0.0 --port $PORT
+```
 
 ### Menjalankan Frontend Web
 Buka terminal baru, masuk ke folder `frontend/`, lalu jalankan:
