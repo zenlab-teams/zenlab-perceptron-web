@@ -1,9 +1,9 @@
 {
-  "accuracy": 0.9856,
-  "error_rate": 0.0144,
-  "mae": 0.0144,
-  "mse": 0.0144,
-  "rmse": 0.12,
+  "accuracy": 0.8392,
+  "error_rate": 0.1608,
+  "mae": 0.1608,
+  "mse": 0.1608,
+  "rmse": 0.401,
   "total_data": 12156,
   "train_data": 9724,
   "test_data": 2432,
@@ -14,20 +14,20 @@
   },
   "class_scores": {
     "Tidak Lulus": {
-      "precision": 1.0,
-      "recall": 0.9855,
-      "f1_score": 0.9927
+      "precision": 0.8205,
+      "recall": 0.8732,
+      "f1_score": 0.846
     },
     "Lulus": {
-      "precision": 0.2391,
-      "recall": 1.0,
-      "f1_score": 0.386
+      "precision": 0.8611,
+      "recall": 0.8045,
+      "f1_score": 0.8318
     }
   },
   "confusion_matrix": {
-    "tn": 2386,
-    "fp": 35,
-    "fn": 0,
-    "tp": 11
+    "tn": 1074,
+    "fp": 156,
+    "fn": 235,
+    "tp": 967
   }
 }

@@ -52,13 +52,13 @@ function App() {
       <div className="mx-auto max-w-7xl">
         <header className="grid gap-8 border-b border-[#D8D0C3] pb-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#B85C38]">Zenlab Early Warning</p>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#B85C38]">Zenlab Early Warning System</p>
             <h1 className="max-w-4xl font-serif text-5xl leading-[0.96] tracking-[-0.02em] text-[#1F1B16] sm:text-7xl">
-              Prediksi kelulusan dengan metrik model yang terbuka.
+              Prediksi Kelulusan Mahasiswa pada Mata Kuliah Prasyarat
             </h1>
           </div>
           <p className="max-w-xl text-lg leading-8 text-[#5D5347]">
-            Input kehadiran, nilai tugas, dan nilai ujian. Dashboard menampilkan performa model Perceptron dari dataset latih terbaru.
+            Input kehadiran, nilai tugas, dan nilai ujian. Sistem akan memprediksi apakah mahasiswa akan lulus atau tidak berdasarkan model perceptron yang telah dilatih.
           </p>
         </header>
 
