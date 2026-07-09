@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pickle
+import json
 import numpy as np
 import os
 from dotenv import load_dotenv
@@ -14,6 +15,7 @@ CORS(app)  # Enable CORS for React frontend
 # Define base directory to locate model
 base_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(base_dir, 'model', 'early_warning_model.pkl')
+metrics_path = os.path.join(base_dir, 'model', 'metrics.json')
 
 # Load the model
 try:
@@ -33,6 +35,16 @@ def get_config():
         "threshold_hadir": float(os.getenv('THRESHOLD_HADIR', 50)),
         "threshold_nilai": float(os.getenv('THRESHOLD_NILAI', 75))
     })
+
+@app.route('/api/metrics', methods=['GET'])
+def get_metrics():
+    if not os.path.exists(metrics_path):
+        return jsonify({
+            "error": "Metrik belum tersedia. Jalankan python model/train_model.py terlebih dahulu."
+        }), 404
+
+    with open(metrics_path, 'r', encoding='utf-8') as f:
+        return jsonify(json.load(f))
 
 @app.route('/api/predict', methods=['POST'])
 def predict():

@@ -1,0 +1,33 @@
+{
+  "accuracy": 0.8326,
+  "error_rate": 0.1674,
+  "mae": 0.1674,
+  "mse": 0.1674,
+  "rmse": 0.4091,
+  "total_data": 12156,
+  "train_data": 9724,
+  "test_data": 2432,
+  "epoch_training": 6,
+  "dataset_distribution": {
+    "train": 9724,
+    "test": 2432
+  },
+  "class_scores": {
+    "Tidak Lulus": {
+      "precision": 0.8254,
+      "recall": 0.9762,
+      "f1_score": 0.8945
+    },
+    "Lulus": {
+      "precision": 0.8772,
+      "recall": 0.4511,
+      "f1_score": 0.5958
+    }
+  },
+  "confusion_matrix": {
+    "tn": 1725,
+    "fp": 42,
+    "fn": 365,
+    "tp": 300
+  }
+}

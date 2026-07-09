@@ -1,65 +1,191 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { PlusCircle, MinusCircle, ShieldAlert, ShieldCheck, Calculator, GraduationCap, Loader2 } from 'lucide-react';
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import {
+  AlertTriangle,
+  BarChart3,
+  Calculator,
+  CheckCircle2,
+  Loader2,
+  MinusCircle,
+  PlusCircle,
+  Table2,
+} from 'lucide-react';
 
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
+const API_URL = 'http://127.0.0.1:5000/api';
+
+function formatNumber(value, digits = 2) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+  return Number(value).toLocaleString('id-ID', {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  });
+}
+
+function formatPercent(value) {
+  if (value === null || value === undefined) return '-';
+  return `${formatNumber(Number(value) * 100, 1)}%`;
+}
+
+function MetricCard({ label, value, tone = 'dark' }) {
+  return (
+    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#756B5E]">{label}</p>
+      <p className={tone === 'accent' ? 'mt-3 text-3xl font-semibold text-[#B85C38]' : 'mt-3 text-3xl font-semibold text-[#1F1B16]'}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SectionTitle({ icon: Icon, title }) {
+  return (
+    <div className="mb-5 flex items-center gap-2 border-b border-[#D8D0C3] pb-3">
+      <Icon size={18} className="text-[#B85C38]" />
+      <h2 className="font-serif text-2xl text-[#1F1B16]">{title}</h2>
+    </div>
+  );
+}
+
+function DatasetChart({ metrics }) {
+  const distribution = metrics?.dataset_distribution || {};
+  const rows = [
+    ['Data latih', distribution.train || metrics?.train_data || 0],
+    ['Data uji', distribution.test || metrics?.test_data || 0],
+  ];
+  const max = Math.max(...rows.map(([, value]) => value), 1);
+
+  return (
+    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
+      <SectionTitle icon={BarChart3} title="Distribusi Dataset" />
+      <div className="space-y-4">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid grid-cols-[88px_1fr_72px] items-center gap-3 text-sm">
+            <span className="font-medium text-[#3A332B]">{label}</span>
+            <div className="h-8 border border-[#D8D0C3] bg-[#F4F1EA]">
+              <div
+                className="h-full bg-[#B85C38]"
+                style={{ width: `${(value / max) * 100}%` }}
+              />
+            </div>
+            <span className="text-right font-semibold text-[#1F1B16]">{value.toLocaleString('id-ID')}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ClassificationChart({ scores }) {
+  const classes = ['Tidak Lulus', 'Lulus'];
+  const metrics = [
+    ['precision', 'Precision'],
+    ['recall', 'Recall'],
+    ['f1_score', 'F1-Score'],
+  ];
+
+  return (
+    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
+      <SectionTitle icon={BarChart3} title="Skor Klasifikasi" />
+      <div className="space-y-6">
+        {classes.map((className) => (
+          <div key={className}>
+            <p className="mb-3 text-sm font-semibold text-[#1F1B16]">{className}</p>
+            <div className="grid grid-cols-3 gap-3">
+              {metrics.map(([key, label]) => {
+                const value = scores?.[className]?.[key] || 0;
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex h-28 items-end border border-[#D8D0C3] bg-[#F4F1EA] px-2 pt-2">
+                      <div
+                        className="w-full bg-[#1F1B16]"
+                        style={{ height: `${Math.max(value * 100, 2)}%` }}
+                      />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#756B5E]">{label}</p>
+                      <p className="text-sm font-semibold text-[#B85C38]">{formatPercent(value)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConfusionMatrix({ matrix }) {
+  const cells = [
+    ['Aktual tidak lulus', matrix?.tn || 0, matrix?.fp || 0],
+    ['Aktual lulus', matrix?.fn || 0, matrix?.tp || 0],
+  ];
+
+  return (
+    <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5">
+      <SectionTitle icon={Table2} title="Confusion Matrix" />
+      <div className="grid grid-cols-[1.1fr_1fr_1fr] border-l border-t border-[#D8D0C3] text-sm">
+        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 font-semibold text-[#756B5E]">Aktual / Prediksi</div>
+        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 text-center font-semibold text-[#756B5E]">Tidak lulus</div>
+        <div className="border-b border-r border-[#D8D0C3] bg-[#F4F1EA] p-3 text-center font-semibold text-[#756B5E]">Lulus</div>
+        {cells.map(([label, left, right]) => (
+          <React.Fragment key={label}>
+            <div className="border-b border-r border-[#D8D0C3] p-3 font-medium text-[#3A332B]">{label}</div>
+            <div className="border-b border-r border-[#D8D0C3] p-3 text-center text-2xl font-semibold text-[#1F1B16]">{left.toLocaleString('id-ID')}</div>
+            <div className="border-b border-r border-[#D8D0C3] p-3 text-center text-2xl font-semibold text-[#B85C38]">{right.toLocaleString('id-ID')}</div>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function App() {
   const [kehadiran, setKehadiran] = useState('');
   const [tugas, setTugas] = useState(['']);
   const [ujian, setUjian] = useState(['']);
-  
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  
-  // Konfigurasi dinamis yang diambil dari .env backend
+  const [metrics, setMetrics] = useState(null);
+  const [metricsError, setMetricsError] = useState(null);
   const [config, setConfig] = useState({
     bobot_ujian: 60,
     bobot_tugas: 40,
     threshold_hadir: 50,
-    threshold_nilai: 75
+    threshold_nilai: 75,
   });
 
-  // Ambil konfigurasi saat halaman pertama kali dibuka
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:5000/api/config');
-        setConfig(response.data);
-      } catch (err) {
-        console.warn("Gagal memuat konfigurasi dari backend. Menggunakan nilai default.", err);
-      }
-    };
-    fetchConfig();
+    axios.get(`${API_URL}/config`)
+      .then((response) => setConfig(response.data))
+      .catch((err) => console.warn('Gagal memuat konfigurasi backend.', err));
+
+    axios.get(`${API_URL}/metrics`)
+      .then((response) => setMetrics(response.data))
+      .catch((err) => setMetricsError(err.response?.data?.error || 'Metrik model belum tersedia.'));
   }, []);
 
-  const addTugas = () => setTugas([...tugas, '']);
-  const removeTugas = (idx) => {
-    const newTugas = [...tugas];
-    newTugas.splice(idx, 1);
-    setTugas(newTugas);
-  };
-  const updateTugas = (idx, val) => {
-    const newTugas = [...tugas];
-    newTugas[idx] = val;
-    setTugas(newTugas);
+  const summaryCards = useMemo(() => ([
+    ['Akurasi', formatPercent(metrics?.accuracy), 'accent'],
+    ['Error Rate', formatPercent(metrics?.error_rate)],
+    ['MAE', formatNumber(metrics?.mae)],
+    ['MSE', formatNumber(metrics?.mse)],
+    ['RMSE', formatNumber(metrics?.rmse)],
+    ['Total Data', metrics?.total_data?.toLocaleString('id-ID') || '-'],
+    ['Data Uji', metrics?.test_data?.toLocaleString('id-ID') || '-'],
+    ['Epoch Training', metrics?.epoch_training?.toLocaleString('id-ID') || '-'],
+  ]), [metrics]);
+
+  const updateList = (setter, list, idx, val) => {
+    const next = [...list];
+    next[idx] = val;
+    setter(next);
   };
 
-  const addUjian = () => setUjian([...ujian, '']);
-  const removeUjian = (idx) => {
-    const newUjian = [...ujian];
-    newUjian.splice(idx, 1);
-    setUjian(newUjian);
-  };
-  const updateUjian = (idx, val) => {
-    const newUjian = [...ujian];
-    newUjian[idx] = val;
-    setUjian(newUjian);
+  const removeListItem = (setter, list, idx) => {
+    setter(list.filter((_, itemIdx) => itemIdx !== idx));
   };
 
   const handlePredict = async (e) => {
@@ -69,46 +195,66 @@ function App() {
     setResult(null);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/predict', {
+      const response = await axios.post(`${API_URL}/predict`, {
         kehadiran: parseFloat(kehadiran) || 0,
-        tugas: tugas.filter(t => t !== '').map(Number),
-        ujian: ujian.filter(u => u !== '').map(Number)
+        tugas: tugas.filter(Boolean).map(Number),
+        ujian: ujian.filter(Boolean).map(Number),
       });
       setResult(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || "Terjadi kesalahan saat menghubungi server.");
+      setError(err.response?.data?.error || err.message || 'Terjadi kesalahan saat menghubungi server.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen p-4 sm:p-8 flex flex-col items-center bg-gray-50 text-gray-900">
-      <div className="w-full max-w-4xl space-y-8">
-        
-        {/* Header Section */}
-        <div className="text-center space-y-2 mt-8 mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-100 text-blue-700 rounded-2xl mb-4 shadow-sm">
-            <GraduationCap size={36} />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-            Zenlab Early Warning
-          </h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Sistem cerdas pendeteksi potensi kelulusan mahasiswa berdasarkan metrik akademik (Tugas & Ujian) dan kedisiplinan.
-          </p>
-        </div>
+  const passed = result?.status === 1;
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Form Card */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-blue-900/5 border border-gray-100 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110 duration-500"></div>
-            
-            <form onSubmit={handlePredict} className="space-y-8 relative z-10">
-              
-              {/* Kehadiran Section */}
-              <div className="space-y-3">
-                <label className="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+  return (
+    <main className="min-h-screen bg-[#F4F1EA] px-4 py-6 text-[#1F1B16] sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="grid gap-8 border-b border-[#D8D0C3] pb-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#B85C38]">Zenlab Early Warning</p>
+            <h1 className="max-w-4xl font-serif text-5xl leading-[0.96] tracking-[-0.02em] text-[#1F1B16] sm:text-7xl">
+              Prediksi kelulusan dengan metrik model yang terbuka.
+            </h1>
+          </div>
+          <p className="max-w-xl text-lg leading-8 text-[#5D5347]">
+            Input kehadiran, nilai tugas, dan nilai ujian. Dashboard menampilkan performa model Perceptron dari dataset latih terbaru.
+          </p>
+        </header>
+
+        <section className="py-8">
+          <SectionTitle icon={BarChart3} title="Ringkasan Model" />
+          {metricsError ? (
+            <div className="rounded-[6px] border border-[#B85C38] bg-[#FBF8F1] p-4 text-sm font-medium text-[#B85C38]">
+              {metricsError}
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {summaryCards.map(([label, value, tone]) => (
+                  <MetricCard key={label} label={label} value={value} tone={tone} />
+                ))}
+              </div>
+              {metrics && (
+                <div className="mt-5 grid gap-5 lg:grid-cols-3">
+                  <DatasetChart metrics={metrics} />
+                  <ClassificationChart scores={metrics.class_scores} />
+                  <ConfusionMatrix matrix={metrics.confusion_matrix} />
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        <section className="grid gap-6 border-t border-[#D8D0C3] py-8 lg:grid-cols-[1fr_0.78fr]">
+          <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5 sm:p-7">
+            <SectionTitle icon={Calculator} title="Prediksi Mahasiswa" />
+            <form onSubmit={handlePredict} className="space-y-7">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#756B5E]">
                   Persentase Kehadiran
                 </label>
                 <div className="relative">
@@ -117,184 +263,134 @@ function App() {
                     required
                     min="0"
                     max="100"
-                    className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-lg font-medium text-gray-900"
-                    placeholder="Contoh: 85"
+                    className="h-12 w-full rounded-[6px] border border-[#D8D0C3] bg-[#F4F1EA] px-4 pr-10 text-lg font-medium outline-none transition focus:border-[#B85C38] focus:bg-[#FBF8F1]"
+                    placeholder="85"
                     value={kehadiran}
                     onChange={(e) => setKehadiran(e.target.value)}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">%</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#756B5E]">%</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Nilai Tugas Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <label className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+              <div className="grid gap-7 md:grid-cols-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#D8D0C3] pb-2">
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756B5E]">
                       Nilai Tugas ({config.bobot_tugas}%)
                     </label>
-                    <button type="button" onClick={addTugas} className="text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 text-sm font-semibold bg-blue-50 px-2 py-1 rounded-lg">
+                    <button type="button" onClick={() => setTugas([...tugas, ''])} className="inline-flex items-center gap-1 text-sm font-semibold text-[#B85C38]">
                       <PlusCircle size={16} /> Tambah
                     </button>
                   </div>
-                  
-                  <div className="space-y-3 overflow-x-hidden">
-                    {tugas.map((t, idx) => (
-                      <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
-                        <span className="text-xs font-bold text-gray-400 w-6 flex-shrink-0">T{idx+1}</span>
-                        <input
-                          type="number"
-                          required
-                          min="0"
-                          max="100"
-                          className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all font-medium text-gray-900"
-                          placeholder="Nilai"
-                          value={t}
-                          onChange={(e) => updateTugas(idx, e.target.value)}
-                        />
-                        {tugas.length > 1 && (
-                          <button type="button" onClick={() => removeTugas(idx)} className="text-red-400 hover:text-red-600 transition-colors p-1 flex-shrink-0">
-                            <MinusCircle size={20} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {tugas.map((value, idx) => (
+                    <div key={idx} className="grid grid-cols-[28px_1fr_28px] items-center gap-2">
+                      <span className="text-xs font-semibold text-[#756B5E]">T{idx + 1}</span>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        className="h-10 min-w-0 rounded-[6px] border border-[#D8D0C3] bg-[#F4F1EA] px-3 font-medium outline-none focus:border-[#B85C38]"
+                        placeholder="Nilai"
+                        value={value}
+                        onChange={(e) => updateList(setTugas, tugas, idx, e.target.value)}
+                      />
+                      {tugas.length > 1 && (
+                        <button type="button" onClick={() => removeListItem(setTugas, tugas, idx)} className="text-[#B85C38]">
+                          <MinusCircle size={20} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Nilai Ujian Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <label className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#D8D0C3] pb-2">
+                    <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756B5E]">
                       Nilai Ujian ({config.bobot_ujian}%)
                     </label>
-                    <button type="button" onClick={addUjian} className="text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 text-sm font-semibold bg-indigo-50 px-2 py-1 rounded-lg">
+                    <button type="button" onClick={() => setUjian([...ujian, ''])} className="inline-flex items-center gap-1 text-sm font-semibold text-[#B85C38]">
                       <PlusCircle size={16} /> Tambah
                     </button>
                   </div>
-                  
-                  <div className="space-y-3 overflow-x-hidden">
-                    {ujian.map((u, idx) => (
-                      <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-left-4 duration-300">
-                        <span className="text-xs font-bold text-gray-400 w-6 flex-shrink-0">U{idx+1}</span>
-                        <input
-                          type="number"
-                          required
-                          min="0"
-                          max="100"
-                          className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all font-medium text-gray-900"
-                          placeholder="Nilai"
-                          value={u}
-                          onChange={(e) => updateUjian(idx, e.target.value)}
-                        />
-                        {ujian.length > 1 && (
-                          <button type="button" onClick={() => removeUjian(idx)} className="text-red-400 hover:text-red-600 transition-colors p-1 flex-shrink-0">
-                            <MinusCircle size={20} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {ujian.map((value, idx) => (
+                    <div key={idx} className="grid grid-cols-[28px_1fr_28px] items-center gap-2">
+                      <span className="text-xs font-semibold text-[#756B5E]">U{idx + 1}</span>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        className="h-10 min-w-0 rounded-[6px] border border-[#D8D0C3] bg-[#F4F1EA] px-3 font-medium outline-none focus:border-[#B85C38]"
+                        placeholder="Nilai"
+                        value={value}
+                        onChange={(e) => updateList(setUjian, ujian, idx, e.target.value)}
+                      />
+                      {ujian.length > 1 && (
+                        <button type="button" onClick={() => removeListItem(setUjian, ujian, idx)} className="text-[#B85C38]">
+                          <MinusCircle size={20} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-14 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[6px] bg-[#1F1B16] px-5 font-semibold text-[#FBF8F1] transition hover:bg-[#B85C38] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? <Loader2 className="animate-spin" size={24} /> : <><Calculator size={24} /> Proses Prediksi Kelulusan</>}
+                {loading ? <Loader2 className="animate-spin" size={22} /> : <Calculator size={21} />}
+                Proses Prediksi
               </button>
             </form>
           </div>
 
-          {/* Result Card */}
-          <div className="lg:col-span-5">
+          <div className="rounded-[6px] border border-[#D8D0C3] bg-[#FBF8F1] p-5 sm:p-7">
+            <SectionTitle icon={passed ? CheckCircle2 : AlertTriangle} title="Hasil Prediksi" />
             {error && (
-              <div className="bg-red-50 text-red-700 p-4 rounded-2xl border border-red-100 animate-in zoom-in-95 duration-300">
-                <p className="font-semibold flex items-center gap-2"><ShieldAlert size={20} /> Error</p>
-                <p className="text-sm mt-1">{error}</p>
+              <div className="rounded-[6px] border border-[#B85C38] bg-[#F4F1EA] p-4 text-sm font-medium text-[#B85C38]">
+                {error}
               </div>
             )}
 
             {result && !error && (
-              <div className={cn(
-                "p-8 rounded-3xl border shadow-2xl animate-in slide-in-from-bottom-8 duration-500 relative overflow-hidden",
-                result.status === 1 
-                  ? "bg-gradient-to-br from-emerald-50 to-green-100 border-emerald-200 text-emerald-900" 
-                  : "bg-gradient-to-br from-rose-50 to-red-100 border-rose-200 text-rose-900"
-              )}>
-                
-                {/* Decoration */}
-                <div className="absolute -top-10 -right-10 opacity-10 text-current">
-                  {result.status === 1 ? <ShieldCheck size={160} /> : <ShieldAlert size={160} />}
-                </div>
-
-                <div className="relative z-10 space-y-6">
-                  <div>
-                    <p className="text-sm font-bold uppercase tracking-widest opacity-70 mb-1">Status Mahasiswa</p>
-                    <h2 className="text-5xl font-black tracking-tight">
-                      {result.status === 1 ? 'LULUS' : 'REMEDIAL'}
-                    </h2>
-                  </div>
-                  
-                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 space-y-4 shadow-sm border border-white/50 text-gray-900">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold opacity-75 text-sm">Kehadiran</span>
-                      <span className="text-xl font-bold">{result.kehadiran}%</span>
-                    </div>
-                    <div className="h-px w-full bg-black/5 rounded-full"></div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold opacity-75 text-sm">Rata-rata Tugas ({config.bobot_tugas}%)</span>
-                      <span className="text-xl font-bold">{result.rata_tugas}</span>
-                    </div>
-                    <div className="h-px w-full bg-black/5 rounded-full"></div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold opacity-75 text-sm">Rata-rata Ujian ({config.bobot_ujian}%)</span>
-                      <span className="text-xl font-bold">{result.rata_ujian}</span>
-                    </div>
-                    {result.nilai_akhir !== undefined && (
-                      <>
-                        <div className="h-px w-full bg-black/5 rounded-full"></div>
-                        <div className="flex justify-between items-center bg-blue-50/50 p-2.5 rounded-xl border border-blue-100/50">
-                          <span className="font-bold text-blue-900 text-sm">Nilai Akhir (Akumulasi)</span>
-                          <span className="text-2xl font-black text-blue-950">{result.nilai_akhir}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <p className="text-sm font-medium opacity-85 leading-relaxed">
-                    {result.status === 1 
-                      ? "Mahasiswa ini memiliki performa yang baik dan aman untuk mengikuti semester berikutnya." 
-                      : "Peringatan! Mahasiswa ini berada di bawah batas minimum. Segera berikan intervensi akademik."}
+              <div className="space-y-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756B5E]">Status mahasiswa</p>
+                  <p className={passed ? 'mt-2 font-serif text-5xl text-[#1F1B16]' : 'mt-2 font-serif text-5xl text-[#B85C38]'}>
+                    {passed ? 'Lulus' : 'Tidak Lulus'}
                   </p>
-
-                  <div className="text-xs space-y-1.5 opacity-80 border-t border-black/10 pt-4 text-gray-700">
-                    <p className="font-bold flex items-center gap-1">📋 Kriteria Kelulusan Kelas:</p>
-                    <ul className="list-disc list-inside pl-1 space-y-0.5 font-medium">
-                      <li>Batas Kehadiran: Minimal <span className="font-bold">{config.threshold_hadir}%</span></li>
-                      <li>Batas Nilai Akhir: Minimal <span className="font-bold">{config.threshold_nilai}</span></li>
-                      <li>Formula Nilai Akhir: <span className="font-semibold">{config.bobot_ujian}% Ujian + {config.bobot_tugas}% Tugas</span></li>
-                    </ul>
-                  </div>
+                </div>
+                <div className="divide-y divide-[#D8D0C3] border-y border-[#D8D0C3]">
+                  {[
+                    ['Kehadiran', `${result.kehadiran}%`],
+                    [`Rata-rata Tugas (${config.bobot_tugas}%)`, result.rata_tugas],
+                    [`Rata-rata Ujian (${config.bobot_ujian}%)`, result.rata_ujian],
+                    ['Nilai Akhir', result.nilai_akhir],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between py-3">
+                      <span className="text-sm font-medium text-[#5D5347]">{label}</span>
+                      <span className="text-xl font-semibold text-[#1F1B16]">{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-sm leading-6 text-[#5D5347]">
+                  Kriteria kelas: kehadiran minimal <strong>{config.threshold_hadir}%</strong>, nilai akhir minimal <strong>{config.threshold_nilai}</strong>, formula <strong>{config.bobot_ujian}% ujian + {config.bobot_tugas}% tugas</strong>.
                 </div>
               </div>
             )}
-            
+
             {!result && !error && (
-              <div className="bg-white border border-gray-200 border-dashed rounded-3xl h-full min-h-[300px] flex items-center justify-center p-8 text-center text-gray-400 shadow-sm">
-                <div>
-                  <Calculator size={48} className="mx-auto mb-4 opacity-20 text-gray-500" />
-                  <p className="font-medium text-gray-500">Masukkan data mahasiswa dan tekan tombol proses untuk melihat hasil prediksi di sini.</p>
-                </div>
+              <div className="flex min-h-[260px] items-center border border-dashed border-[#D8D0C3] p-6 text-[#756B5E]">
+                Masukkan data mahasiswa untuk melihat prediksi kelulusan.
               </div>
             )}
           </div>
-        </div>
-
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
